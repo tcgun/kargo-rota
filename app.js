@@ -150,11 +150,11 @@ function parseAddress(text) {
     }
 
     // Neighborhood (Mahalle)
-    const mahMatch = text.match(/([^,.\n]+?)\s*(?:mahalle(?:si)?|mah\.?|mh\.?)/i);
+    const mahMatch = text.match(/([^,\n]+?)\s*(?:mahalle(?:si)?|mah\.?|mh\.?)/i);
     if (mahMatch) addressObj.mahalle = mahMatch[1].trim();
 
     // Street/Avenue (Sokak/Cadde)
-    const sokMatch = text.match(/([^,.\n]+?)\s*(?:sk\.?|sok\.?|sokak(?:ğı)?|cd\.?|cad\.?|cadde(?:si)?|blv\.?|bulvar(?:ı)?)/i);
+    const sokMatch = text.match(/([^,\n]+?)\s*(?:sk\.?|sok\.?|sokak(?:ğı)?|cd\.?|cad\.?|cadde(?:si)?|blv\.?|bulvar(?:ı)?)/i);
     if (sokMatch) addressObj.sokak = sokMatch[1].trim();
 
     // No (örn: No: 45 / n: 45 / no 45)
