@@ -405,3 +405,113 @@ footer {
     position: absolute;
     border-radius: 50%;
 }
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+    body {
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        padding: 0.8rem 1rem;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(10px);
+        margin-bottom: 0;
+        border-radius: 0;
+        height: 60px;
+        display: flex;
+        align-items: center;
+    }
+
+    header h1 {
+        font-size: 1.2rem;
+    }
+
+    main {
+        padding-top: 60px; /* Header height */
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 60px);
+        max-width: 100%;
+    }
+
+    .map-section {
+        position: sticky;
+        top: 60px;
+        height: 35vh;
+        min-height: 250px;
+        z-index: 900;
+        margin: 0;
+        border-radius: 0;
+        flex-shrink: 0;
+    }
+
+    #map {
+        border-radius: 0;
+    }
+
+    .controls-section {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        padding-bottom: 90px; /* Space for sticky bottom bar */
+        background: var(--bg-main);
+    }
+
+    .upload-area {
+        padding: 1.5rem;
+    }
+
+    .field-grid {
+        margin-right: 0;
+    }
+
+    .field input {
+        font-size: 16px; /* Prevents iOS auto-zoom */
+        padding: 1.2rem;
+    }
+
+    .route-info {
+        position: fixed !important;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto !important;
+        background: rgba(30, 41, 59, 0.98);
+        padding: 1rem;
+        box-shadow: 0 -8px 20px rgba(0,0,0,0.5);
+        border-top: 2px solid var(--primary);
+        z-index: 1100;
+        flex-direction: row;
+        align-items: center;
+        width: 100% !important;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    .route-info .info-item {
+        display: none; /* Hide stats to save space for buttons */
+    }
+
+    .nav-btn {
+        width: 100% !important;
+        margin: 0 !important;
+        height: 54px;
+        font-size: 1.1rem;
+    }
+
+    #staging-panel, #address-panel {
+        margin-top: 1rem;
+    }
+
+    .staged-item-structured {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+}

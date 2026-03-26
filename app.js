@@ -36,6 +36,11 @@ function initMap() {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
+    // Fix for mobile layout changes
+    window.addEventListener('resize', () => {
+        if (map) map.invalidateSize();
+    });
+
     // Try to get user location
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
