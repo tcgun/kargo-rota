@@ -477,10 +477,8 @@ footer {
     background: rgba(0, 0, 0, 0.3);
 }
 
-.test-config {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+.batch-entry textarea {
+    height: 180px; /* Larger focus for mobile paste */
 }
 
 .test-config input {
