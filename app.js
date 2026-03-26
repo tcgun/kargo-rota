@@ -131,6 +131,7 @@ function renderStagingList() {
 }
 
 function parseAddress(text) {
+    let tempText = text.trim();
     const addressObj = {
         mahalle: '',
         sokak: '',
@@ -141,29 +142,40 @@ function parseAddress(text) {
         sehir: 'İstanbul'
     };
 
-    // İlçe Bulma
+    if (!text) return addressObj;
+
+    // 1. Mahalle (Mah)
+    const mahMatch = tempText.match(/([^,\s\n][^,\n]*?)\s*(?:mahalle(?:si)?|mah\.?|mh\.?)/i);
+    if (mahMatch) {
+        addressObj.mahalle = mahMatch[1].trim();
+        tempText = tempText.replace(mahMatch[0], ' '); 
+    }
+
+    // 2. Sokak/Cadde (Sok/Cad)
+    const sokMatch = tempText.match(/([^,\s\n][^,\n]*?)\s*(?:sk\.?|sok\.?|sokak(?:ğı)?|cd\.?|cad\.?|cadde(?:si)?|blv\.?|bulvar(?:ı)?)/i);
+    if (sokMatch) {
+        addressObj.sokak = sokMatch[1].trim();
+        tempText = tempText.replace(sokMatch[0], ' '); 
+    }
+
+    // 3. No (n / no)
+    const noMatch = tempText.match(/(?:no|n)\s*[:\s.]?\s*(\d+[\/\d]*)/i);
+    if (noMatch) {
+        addressObj.no = noMatch[1];
+        tempText = tempText.replace(noMatch[0], ' ');
+    }
+
+    // 4. İlçe Tespiti
     for (const district of ISTANBUL_DISTRICTS) {
-        if (text.toLowerCase().includes(district.toLowerCase())) {
+        if (tempText.toLowerCase().includes(district.toLowerCase())) {
             addressObj.ilce = district;
+            tempText = tempText.replace(new RegExp(district, 'gi'), ' ');
             break;
         }
     }
 
-    // Neighborhood (Mahalle)
-    const mahMatch = text.match(/([^,\n]+?)\s*(?:mahalle(?:si)?|mah\.?|mh\.?)/i);
-    if (mahMatch) addressObj.mahalle = mahMatch[1].trim();
-
-    // Street/Avenue (Sokak/Cadde)
-    const sokMatch = text.match(/([^,\n]+?)\s*(?:sk\.?|sok\.?|sokak(?:ğı)?|cd\.?|cad\.?|cadde(?:si)?|blv\.?|bulvar(?:ı)?)/i);
-    if (sokMatch) addressObj.sokak = sokMatch[1].trim();
-
-    // No (örn: No: 45 / n: 45 / no 45)
-    const noMatch = text.match(/(?:no|n)\s*[:\s.]?\s*(\d+[\/\d]*)/i);
-    if (noMatch) addressObj.no = noMatch[1];
-
-    // Kat/Daire (örn: Kat 6 / Daire 12 / giris kat)
-    const detayMatch = text.match(/(?:Kat|Daire|giris|giriş)\s*[:\s]?\s*(\d+|kat)/i);
-    if (detayMatch) addressObj.detay = detayMatch[0].trim();
+    // 5. Kalan her şeyi DETAY'a at (Daire, Kat vb)
+    addressObj.detay = tempText.replace(/\s+/g, ' ').trim();
 
     return addressObj;
 }
