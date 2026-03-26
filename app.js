@@ -65,16 +65,17 @@ async function processImage(file) {
         const { data: { text } } = await Tesseract.recognize(file, 'tur');
         console.log("OCR Output:", text);
 
-        // Split by ISTANBUL or # (marker for new delivery item)
-        const segments = text.split(/İSTANBUL|#/i);
+        // Split logic: Split by ISTANBUL or # (end of delivery block)
+        // We ignore single newlines to keep multi-line addresses together
+        const segments = text.split(/İSTANBUL|#/gi);
         
         stagedAddresses = [];
-        for (let segment of segments) {
+        segments.forEach(segment => {
             const cleaned = cleanAddressText(segment);
-            if (cleaned.length > 8) { 
+            if (cleaned.length > 15) { 
                 stagedAddresses.push(parseAddress(cleaned));
             }
-        }
+        });
 
         if (stagedAddresses.length > 0) {
             renderStagingList();
@@ -131,63 +132,12 @@ function renderStagingList() {
 }
 
 function parseAddress(text) {
-    let tempText = text.trim();
-    const addressObj = {
-        mahalle: '',
-        sokak: '',
-        no: '',
-        detay: '',
-        ilce: '',
-        not: '',
-        sehir: 'İstanbul'
+    // We now just clean and return the whole text as one block
+    // to satisfy the user's request for simplicity.
+    return {
+        text: cleanAddressText(text),
+        note: ''
     };
-
-    if (!text) return addressObj;
-
-    // 1. Mahalle (Mah)
-    const mahMatch = tempText.match(/([^,\s\n][^,\n]*?)\s*(?:mahalle(?:si)?|mah\.?|mh\.?)/i);
-    if (mahMatch) {
-        addressObj.mahalle = mahMatch[1].trim();
-        tempText = tempText.replace(mahMatch[0], ' '); 
-    }
-
-    // 2. Sokak/Cadde (Sok/Cad)
-    const sokMatch = tempText.match(/([^,\s\n][^,\n]*?)\s*(?:sk\.?|sok\.?|sokak(?:ğı)?|cd\.?|cad\.?|cadde(?:si)?|blv\.?|bulvar(?:ı)?)/i);
-    if (sokMatch) {
-        addressObj.sokak = sokMatch[1].trim();
-        tempText = tempText.replace(sokMatch[0], ' '); 
-    }
-
-    // 3. No (n / no)
-    const noMatch = tempText.match(/(?:no|n)\s*[:\s.]?\s*(\d+[\/\d]*)/i);
-    if (noMatch) {
-        addressObj.no = noMatch[1];
-        tempText = tempText.replace(noMatch[0], ' ');
-    }
-
-    // 4. İlçe Tespiti
-    for (const district of ISTANBUL_DISTRICTS) {
-        if (tempText.toLowerCase().includes(district.toLowerCase())) {
-            addressObj.ilce = district;
-            tempText = tempText.replace(new RegExp(district, 'gi'), ' ');
-            break;
-        }
-    }
-
-    // 5. Posta Kodu Temizleme (34220 vb)
-    const zipMatch = tempText.match(/\b\d{5}\b/);
-    if (zipMatch) {
-        tempText = tempText.replace(zipMatch[0], ' ');
-    }
-
-    // 6. Şehir Temizleme (İstanbul/Istanbul)
-    tempText = tempText.replace(/İSTANBUL|ISTANBUL/gi, ' ');
-
-    // 7. Kalan her şeyi DETAY'a at (Daire, Kat vb)
-    // Virgül, nokta, eğik çizgi gibi ayraçları da temizleyelim
-    addressObj.detay = tempText.replace(/[,;.\/]/g, ' ').replace(/\s+/g, ' ').trim();
-
-    return addressObj;
 }
 
 function updateStagedField(index, field, value) {
@@ -199,24 +149,85 @@ function removeStaged(index) {
     renderStagingList();
 }
 
+function renderStagingList() {
+    const list = document.getElementById('staging-list');
+    const panel = document.getElementById('staging-panel');
+    
+    if (stagedAddresses.length === 0) {
+        panel.style.display = 'none';
+        return;
+    }
+
+    panel.style.display = 'block';
+    list.innerHTML = '';
+
+    stagedAddresses.forEach((addr, index) => {
+        const card = document.createElement('div');
+        card.className = 'staging-card';
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                <label style="color: var(--primary); font-size: 0.75rem; font-weight: bold; letter-spacing: 0.05rem;">TAM ADRES</label>
+                <span class="delete-staged" onclick="removeStaged(${index})">🗑️</span>
+            </div>
+            <textarea 
+                placeholder="Örn: Namık Kemal Mah 22.Sok No:8 Esenler"
+                oninput="updateStagedField(${index}, 'text', this.value)"
+                class="staged-input-main"
+            >${addr.text}</textarea>
+            
+            <label style="color: grey; font-size: 0.7rem; margin-top: 0.5rem; display: block; font-weight: bold;">TESLİMAT NOTU</label>
+            <textarea 
+                placeholder="Örn: Zil bozuk, güvenliğe bırak" 
+                oninput="updateStagedField(${index}, 'note', this.value)"
+                class="staged-input-note"
+            >${addr.note}</textarea>
+        `;
+        list.appendChild(card);
+    });
+}
+
 let currentNote = ""; // Temporary storage for geocoding process
 
 async function markStagedOnMap() {
     if (stagedAddresses.length === 0) return;
-    
-    showStatus("Adresler haritaya aktarılıyor...");
-    const toProcess = [...stagedAddresses];
-    stagedAddresses = [];
-    document.getElementById('staging-panel').style.display = 'none';
 
-    for (let addr of toProcess) {
-        currentNote = addr.not;
-        // Yapılandırılmış veriden arama sorgusu oluştur
-        const query = `${addr.mahalle} ${addr.sokak} No:${addr.no} ${addr.ilce} ${addr.sehir}`;
-        await geocodeAndAdd(query);
+    showStatus(`${stagedAddresses.length} adres işaretleniyor...`);
+    const results = [];
+
+    for (const item of stagedAddresses) {
+        // Construct full query
+        const query = `${item.text}, İstanbul`;
+        const coords = await geocodeAndAdd(query);
+        
+        if (coords) {
+            results.push({
+                text: item.text,
+                coords: coords,
+                note: item.note,
+                status: 'pending'
+            });
+        } else {
+            // If main query fails, try with just text
+            const altCoords = await geocodeAndAdd(item.text);
+            results.push({
+                text: item.text,
+                coords: altCoords,
+                note: item.note,
+                status: 'pending'
+            });
+        }
     }
-    currentNote = "";
+
+    addresses = results;
+    stagedAddresses = [];
+    renderStagingList();
+    renderAddressList();
+    updateMap();
     hideStatus();
+    
+    // Switch scroll to address container
+    document.getElementById('address-container').style.display = 'block';
+    window.scrollTo(0, document.body.scrollHeight);
 }
 
 function cleanAddressText(text) {
@@ -232,24 +243,23 @@ function cleanAddressText(text) {
 }
 
 function addManualStaged() {
-    stagedAddresses.push(parseAddress(""));
+    stagedAddresses.push({ text: '', note: '' });
     renderStagingList();
-    // Scroll to the bottom of the staging list
-    const list = document.getElementById('staging-list');
-    list.scrollTop = list.scrollHeight;
 }
 
 function processBatchPaste() {
-    const text = document.getElementById('batch-paste').value;
-    if (!text.trim()) return;
+    const text = document.getElementById('batch-paste').value.trim();
+    if (!text) return;
 
-    // Split by newlines or ISTANBUL
-    const segments = text.split(/\n|İSTANBUL/i);
+    // Split by double newlines or ISTANBUL
+    // Single newlines are ignored because addresses often span multiple lines
+    const segments = text.split(/\n\n|İSTANBUL/i);
     let count = 0;
 
     for (let segment of segments) {
         const cleaned = cleanAddressText(segment);
-        if (cleaned.length > 8) { 
+        // Minimum meaningful address length is around 15 chars
+        if (cleaned.length > 15) { 
             stagedAddresses.push(parseAddress(cleaned));
             count++;
         }
@@ -261,7 +271,7 @@ function processBatchPaste() {
         showStatus(`${count} adet adres panodan eklendi.`);
         setTimeout(hideStatus, 2000);
     } else {
-        alert("Geçerli bir adres bulunamadı. Lütfen kontrol edin.");
+        alert("Geçerli bir adres bulunamadı (en az 15 karakter olmalı).");
     }
 }
 
