@@ -191,21 +191,24 @@ let currentNote = ""; // Temporary storage for geocoding process
 async function markStagedOnMap() {
     if (stagedAddresses.length === 0) return;
 
-    showStatus(`${stagedAddresses.length} adres işaretleniyor...`);
+    const total = stagedAddresses.length;
     const results = [];
 
-    for (const item of stagedAddresses) {
+    for (let i = 0; i < total; i++) {
+        const item = stagedAddresses[i];
+        showStatus(`Aranıyor (${i + 1}/${total}): ${item.text.substring(0, 20)}...`);
+
         // Respect Nominatim rate limit (1 request per second)
-        if (results.length > 0) {
+        if (i > 0) {
             await new Promise(r => setTimeout(r, 1100));
         }
 
         const query = `${item.text}, İstanbul`;
         let geocodeResult = await geocodeAndAdd(query);
         
-        // If failed, try without "İstanbul" suffix (sometimes it's redundant or confusing)
+        // Minor fallback if first try fails
         if (!geocodeResult) {
-            await new Promise(r => setTimeout(r, 1100));
+            await new Promise(r => setTimeout(r, 600)); // Shorter delay for retry
             geocodeResult = await geocodeAndAdd(item.text);
         }
 
@@ -235,7 +238,10 @@ async function markStagedOnMap() {
     updateMapMarkers();
     hideStatus();
     
-    document.getElementById('address-container').style.display = 'block';
+    // Switch scroll to address container
+    const container = document.getElementById('address-container');
+    container.style.display = 'block';
+    container.scrollIntoView({ behavior: 'smooth' });
 }
 
 function cleanAddressText(text) {
@@ -288,8 +294,19 @@ async function geocodeAndAdd(text) {
     const query = encodeURIComponent(text.substring(0, 100));
     const bbox = "28.1,41.5,29.1,40.8"; 
     
+    // Add a timeout to prevent hanging forever
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 sec timeout
+
     try {
-        const response = await fetch(`${NOMINATIM_URL}?format=json&q=${query}&viewbox=${bbox}&bounded=1&limit=1`);
+        const url = `${NOMINATIM_URL}?format=json&q=${query}&viewbox=${bbox}&bounded=1&limit=1&addressdetails=1`;
+        // Nominatim policy: Provide a unique user-agent
+        const response = await fetch(url, {
+            headers: { 'User-Agent': 'KargoRota-Delivery-App/1.0' },
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
         const data = await response.json();
         
         if (data && data.length > 0) {
@@ -300,7 +317,11 @@ async function geocodeAndAdd(text) {
             };
         }
     } catch (error) {
-        console.error("Geocoding fetch error:", error);
+        if (error.name === 'AbortError') {
+            console.error("Geocoding timeout");
+        } else {
+            console.error("Geocoding fetch error:", error);
+        }
     }
     return null;
 }
