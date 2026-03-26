@@ -195,39 +195,47 @@ async function markStagedOnMap() {
     const results = [];
 
     for (const item of stagedAddresses) {
-        // Construct full query
+        // Respect Nominatim rate limit (1 request per second)
+        if (results.length > 0) {
+            await new Promise(r => setTimeout(r, 1100));
+        }
+
         const query = `${item.text}, İstanbul`;
-        const coords = await geocodeAndAdd(query);
+        let geocodeResult = await geocodeAndAdd(query);
         
-        if (coords) {
+        // If failed, try without "İstanbul" suffix (sometimes it's redundant or confusing)
+        if (!geocodeResult) {
+            await new Promise(r => setTimeout(r, 1100));
+            geocodeResult = await geocodeAndAdd(item.text);
+        }
+
+        if (geocodeResult) {
             results.push({
-                text: item.text,
-                coords: coords,
+                text: geocodeResult.display_name,
+                coords: geocodeResult.coords,
                 note: item.note,
                 status: 'pending'
             });
+            addMarker(geocodeResult.coords, geocodeResult.display_name);
         } else {
-            // If main query fails, try with just text
-            const altCoords = await geocodeAndAdd(item.text);
             results.push({
-                text: item.text,
-                coords: altCoords,
+                text: "Haritada bulunamadı: " + item.text,
+                coords: null,
+                raw: item.text,
                 note: item.note,
-                status: 'pending'
+                status: 'error'
             });
         }
     }
 
-    addresses = results;
+    addresses = [...addresses, ...results];
     stagedAddresses = [];
     renderStagingList();
     renderAddressList();
-    updateMap();
+    updateMapMarkers();
     hideStatus();
     
-    // Switch scroll to address container
     document.getElementById('address-container').style.display = 'block';
-    window.scrollTo(0, document.body.scrollHeight);
 }
 
 function cleanAddressText(text) {
@@ -276,7 +284,7 @@ function processBatchPaste() {
 }
 
 // Geocoding Logic
-async function geocodeAndAdd(text, isRetry = false) {
+async function geocodeAndAdd(text) {
     const query = encodeURIComponent(text.substring(0, 100));
     const bbox = "28.1,41.5,29.1,40.8"; 
     
@@ -286,26 +294,15 @@ async function geocodeAndAdd(text, isRetry = false) {
         
         if (data && data.length > 0) {
             const { lat, lon, display_name } = data[0];
-            const coords = [parseFloat(lat), parseFloat(lon)];
-            addresses.push({ text: display_name, coords });
-            renderAddressList();
-            addMarker(coords, display_name);
-        } else if (!isRetry) {
-            // İlk deneme başarısızsa, daha basit bir arama dene (Örn: No: varsa sil)
-            const fallbackText = text.replace(/No\s*:\s*\d+/gi, '').trim();
-            if (fallbackText !== text) {
-                console.log("Yeniden deneniyor (basitleştirilmiş):", fallbackText);
-                await geocodeAndAdd(fallbackText, true);
-            } else {
-                failGeocoding(text);
-            }
-        } else {
-            failGeocoding(text);
+            return {
+                coords: [parseFloat(lat), parseFloat(lon)],
+                display_name: display_name
+            };
         }
     } catch (error) {
-        console.error("Geocoding error:", error);
-        if (!isRetry) failGeocoding(text);
+        console.error("Geocoding fetch error:", error);
     }
+    return null;
 }
 
 function failGeocoding(text) {
