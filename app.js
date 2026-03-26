@@ -150,15 +150,15 @@ function parseAddress(text) {
     }
 
     // Neighborhood (Mahalle)
-    const mahMatch = text.match(/(\w+(?:\s+\w+)*)\s+(?:mahalle(?:si)?|mah\.?|mh\.?)/i);
+    const mahMatch = text.match(/([^,.\n]+?)\s*(?:mahalle(?:si)?|mah\.?|mh\.?)/i);
     if (mahMatch) addressObj.mahalle = mahMatch[1].trim();
 
     // Street/Avenue (Sokak/Cadde)
-    const sokMatch = text.match(/(\w+(?:\s+\w+)*)\s+(?:sokak(?:ğı)?|sok\.?|sk\.?|cadde(?:si)?|cad\.?|cd\.?|bulvar(?:ı)?|blv\.?)/i);
+    const sokMatch = text.match(/([^,.\n]+?)\s*(?:sk\.?|sok\.?|sokak(?:ğı)?|cd\.?|cad\.?|cadde(?:si)?|blv\.?|bulvar(?:ı)?)/i);
     if (sokMatch) addressObj.sokak = sokMatch[1].trim();
 
-    // No (örn: No: 45 / No 45)
-    const noMatch = text.match(/No\s*[:\s]?\s*(\d+[\/\d]*)/i);
+    // No (örn: No: 45 / n: 45 / no 45)
+    const noMatch = text.match(/(?:no|n)\s*[:\s.]?\s*(\d+[\/\d]*)/i);
     if (noMatch) addressObj.no = noMatch[1];
 
     // Kat/Daire (örn: Kat 6 / Daire 12 / giris kat)
