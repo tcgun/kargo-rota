@@ -1,0 +1,407 @@
+:root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --bg-dark: #0f172a;
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent: #10b981;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.glass-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 20% 30%, rgba(79, 70, 229, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+    z-index: -1;
+}
+
+header {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.logo h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+}
+
+.logo h1 span {
+    color: var(--primary);
+}
+
+.tagline {
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 1.5rem;
+    padding: 0 2rem 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+@media (max-width: 1000px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+}
+
+.glass-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.upload-area {
+    border: 2px dashed var(--glass-border);
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    border-color: var(--primary);
+    background: rgba(79, 70, 229, 0.05);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.primary-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    width: 100%;
+    margin-top: 1rem;
+    cursor: pointer;
+    transition: 0.3s transform, 0.3s background;
+}
+
+.secondary-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--glass-border);
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    border-color: var(--primary);
+}
+
+.nav-btn {
+    background: var(--accent) !important;
+    margin-top: 0 !important;
+    flex: 1;
+}
+
+.primary-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+.address-list-container {
+    margin-top: 1.5rem;
+}
+
+#address-list {
+    list-style: none;
+    margin-top: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.address-item, .staged-item-structured {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border: 1px solid var(--glass-border);
+}
+
+.field-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    flex: 1;
+    margin-right: 1.5rem;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.field label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--primary);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.field input {
+    background: rgba(15, 23, 42, 0.4);
+    border: 2px solid var(--glass-border);
+    color: var(--text-main);
+    padding: 1rem 1.25rem;
+    border-radius: 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.field input:focus {
+    border-color: var(--primary);
+    background: rgba(15, 23, 42, 0.6);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    outline: none;
+}
+
+.address-item.error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.address-item.delivered {
+    opacity: 0.5;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.address-item.delivered .addr-text span {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+.addr-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1;
+}
+
+.main-addr {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.addr-note {
+    font-size: 0.8rem;
+    color: var(--primary);
+    font-style: italic;
+    background: rgba(79, 70, 229, 0.05);
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: fit-content;
+}
+
+.addr-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.edit-btn, .status-btn, .whatsapp-btn {
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s all;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.edit-btn {
+    background: var(--primary);
+    color: white;
+}
+
+.status-btn {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--accent);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.whatsapp-btn {
+    background: #25D366;
+    color: white;
+    box-shadow: 0 2px 4px rgba(37, 211, 102, 0.2);
+}
+
+.whatsapp-btn:hover {
+    background: #128C7E;
+    transform: translateY(-1px);
+}
+
+.address-item.delivered .status-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    border-color: transparent;
+}
+
+.address-item .remove-btn {
+    color: #ef4444;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 1rem;
+}
+
+.map-section {
+    position: relative;
+    min-height: 500px;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    border-radius: 1rem;
+    z-index: 1;
+}
+
+.route-info {
+    position: absolute;
+    bottom: 2rem;
+    left: 2rem;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid var(--glass-border);
+    z-index: 10;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.info-item .label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: block;
+}
+
+.info-item .value {
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.status-panel {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.loader {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255,255,255,.1);
+    border-radius: 50%;
+    border-top-color: var(--primary);
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+footer {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* Custom Numbered Markers */
+.custom-div-icon {
+    background: none;
+    border: none;
+}
+
+.marker-pin {
+    width: 30px;
+    height: 30px;
+    border-radius: 50% 50% 50% 0;
+    background: var(--accent);
+    position: absolute;
+    transform: rotate(-45deg);
+    left: 50%;
+    top: 50%;
+    margin: -15px 0 0 -15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    border: 2px solid white;
+    transition: background 0.3s;
+}
+
+.delivered-marker .marker-pin {
+    background: #64748b !important;
+}
+
+.marker-pin span {
+    transform: rotate(45deg);
+    color: white;
+    font-weight: 800;
+    font-size: 14px;
+}
+
+.marker-pin::after {
+    content: '';
+    width: 24px;
+    height: 24px;
+    margin: 3px 0 0 3px;
+    background: transparent;
+    position: absolute;
+    border-radius: 50%;
+}

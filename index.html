@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kargo Rota - Hızlı ve Ücretsiz Rota Optimizasyonu</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+</head>
+<body class="dark-theme">
+    <div class="glass-bg"></div>
+    
+    <header>
+        <div class="logo">
+            <span class="icon">🚚</span>
+            <h1>Kargo<span>Rota</span></h1>
+        </div>
+        <p class="tagline">Görsellerden adres okuyun, en hızlı rotayı çizin.</p>
+    </header>
+
+    <main>
+        <section class="controls glass-card">
+            <div class="upload-area" id="drop-zone">
+                <input type="file" id="file-input" multiple accept="image/*" hidden>
+                <div class="upload-content">
+                    <span class="upload-icon">📸</span>
+                    <h3>Adres Görseli Yükleyin</h3>
+                    <p>Dosyaları sürükleyin veya tıklayın</p>
+                </div>
+            </div>
+            
+            <button id="add-test-data-btn" class="secondary-btn" style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">
+                🧪 Test Adresleri Ekle (20 Adet)
+            </button>
+
+            <div class="status-panel" id="status-panel" style="display: none;">
+                <div class="loader"></div>
+                <p id="status-text">Görseller işleniyor...</p>
+            </div>
+
+            <!-- Staging Area (Yeni) -->
+            <div id="staging-panel" class="glass-card" style="display: none; margin-top: 1rem;">
+                <h3>Adresleri Kontrol Et</h3>
+                <p class="tagline">Haritaya eklemeden önce düzenlemeleri yapın.</p>
+                <div id="staging-list" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                <button id="mark-on-map-btn" class="primary-btn" style="background: var(--accent); margin-top: 1rem;">Haritada İşaretle 📍</button>
+            </div>
+
+            <div class="address-list-container" id="address-container" style="display: none;">
+                <h3>Tespit Edilen Adresler</h3>
+                <ul id="address-list"></ul>
+                <button id="optimize-btn" class="primary-btn">Rotayı Optimize Et</button>
+            </div>
+        </section>
+
+        <section class="map-section glass-card">
+            <div id="map"></div>
+            <div id="route-info" class="route-info" style="display: none;">
+                <div class="info-item">
+                    <span class="label">Toplam Mesafe:</span>
+                    <span id="total-distance" class="value">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Tahmini Süre:</span>
+                    <span id="total-time" class="value">-</span>
+                </div>
+                <button id="start-nav-btn" class="primary-btn nav-btn">Navigasyonu Başlat 🏁</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2024 KargoRota - %100 Ücretsiz</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="app.js"></script>
+</body>
+</html>
