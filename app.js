@@ -174,8 +174,15 @@ function parseAddress(text) {
         }
     }
 
-    // 5. Kalan her şeyi DETAY'a at (Daire, Kat vb)
-    addressObj.detay = tempText.replace(/\s+/g, ' ').trim();
+    // 5. Posta Kodu Temizleme (34220 vb)
+    const zipMatch = tempText.match(/\b\d{5}\b/);
+    if (zipMatch) {
+        tempText = tempText.replace(zipMatch[0], ' ');
+    }
+
+    // 6. Kalan her şeyi DETAY'a at (Daire, Kat vb)
+    // Virgül ve gereksiz karakterleri de temizleyelim
+    addressObj.detay = tempText.replace(/[,;.]/g, ' ').replace(/\s+/g, ' ').trim();
 
     return addressObj;
 }
