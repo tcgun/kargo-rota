@@ -180,9 +180,12 @@ function parseAddress(text) {
         tempText = tempText.replace(zipMatch[0], ' ');
     }
 
-    // 6. Kalan her şeyi DETAY'a at (Daire, Kat vb)
-    // Virgül ve gereksiz karakterleri de temizleyelim
-    addressObj.detay = tempText.replace(/[,;.]/g, ' ').replace(/\s+/g, ' ').trim();
+    // 6. Şehir Temizleme (İstanbul/Istanbul)
+    tempText = tempText.replace(/İSTANBUL|ISTANBUL/gi, ' ');
+
+    // 7. Kalan her şeyi DETAY'a at (Daire, Kat vb)
+    // Virgül, nokta, eğik çizgi gibi ayraçları da temizleyelim
+    addressObj.detay = tempText.replace(/[,;.\/]/g, ' ').replace(/\s+/g, ' ').trim();
 
     return addressObj;
 }
