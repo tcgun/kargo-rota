@@ -26,6 +26,7 @@
 
     <main>
         <section class="controls glass-card">
+            <!-- Görsel Yükleme (Geçici Olarak Kaldırıldı)
             <div class="upload-area" id="drop-zone">
                 <input type="file" id="file-input" multiple accept="image/*" hidden>
                 <div class="upload-content">
@@ -34,7 +35,19 @@
                     <p>Dosyaları sürükleyin veya tıklayın</p>
                 </div>
             </div>
-            
+            -->
+            <!-- Görsel Yükleme (Geçici Olarak Kaldırıldı) -->
+            <div id="upload-section" class="upload-area" style="display: none;">
+                <div id="drop-zone" class="drop-zone">
+                    <div class="upload-icon">📸</div>
+                    <p>Adres Listesi Görselini Buraya Sürükleyin veya Tıklayın</p>
+                    <input type="file" id="file-input" accept="image/*" multiple hidden>
+                </div>
+            </div>
+
+            <div class="manual-entry-section">
+                <h3 style="margin-bottom: 1rem;">📍 Adres Girişi</h3>
+            </div>
             <button id="add-manual-btn" class="secondary-btn" style="margin-top: 1rem;">
                 ⌨️ Manuel Adres Ekle
             </button>
