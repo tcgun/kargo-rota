@@ -62,18 +62,16 @@ function initMap() {
 async function processImage(file) {
     showStatus(`Görsel işleniyor: ${file.name}...`);
     try {
-        const result = await Tesseract.recognize(file, 'tur', {
-            logger: m => console.log(m)
-        });
-        const fullText = result.data.text;
-        
-        // "İSTANBUL" kelimesini ayraç olarak kullanarak metni parçala
-        const segments = fullText.split(/(?:İSTANBUL|ISTANBUL)/gi);
+        const { data: { text } } = await Tesseract.recognize(file, 'tur');
+        console.log("OCR Output:", text);
+
+        // Split by ISTANBUL or # (marker for new delivery item)
+        const segments = text.split(/İSTANBUL|#/i);
         
         stagedAddresses = [];
         for (let segment of segments) {
             const cleaned = cleanAddressText(segment);
-            if (cleaned.length > 10) { 
+            if (cleaned.length > 8) { 
                 stagedAddresses.push(parseAddress(cleaned));
             }
         }
@@ -200,15 +198,23 @@ async function markStagedOnMap() {
 }
 
 function cleanAddressText(text) {
+    if (!text) return "";
     return text
-        .replace(/\d{1,2}[:.]\d{2}/g, '') // Saatleri temizle (20:12 vb.)
-        .replace(/(?:Teslim alındı|Teslim edildi|Güzargah Listesi|Bugün|Dün|Mevcut Konum|Barkod|Ürün No)/gi, '') // Durum yazılarını temizle
-        .replace(/#\s*[A-Z0-9-]+/gi, '') // # C7, # 38-52 gibi kodları temizle
-        .replace(/^[^\wçğıöşüÇĞİÖŞÜ]+/gm, '') // Her satırın başındaki sembolleri temizle (m flag ile her satıra bak)
-        .replace(/(?:Kat\s*\d+|Daire\s*\d+|giriş kat|giris kat|kat:\d+)/gi, '') // Kat/Daire bilgisini temizle
-        .replace(/[:>|—_]/g, '') // Ayraç ve sembolleri temizle
-        .replace(/[ \t]+/g, ' ') // Yan yana boşlukları temizle (satır sonlarını koru)
+        .replace(/\d{1,2}:\d{2}/g, ' ') // Remove timestamps
+        .replace(/Teslim edildi[:]\s*/gi, ' ') // Remove delivery labels
+        .replace(/#\s*[A-Z0-9]+(-[0-9]+)?/g, ' ') // Remove tracking numbers
+        .replace(/Today|Bugün|Yesterday|Dün|Görülmedi/gi, ' ')
+        .replace(/[•|@|©]/g, ' ') // Remove specific UI icons
+        .replace(/\s+/g, ' ') // Normalize spaces
         .trim();
+}
+
+function addManualStaged() {
+    stagedAddresses.push(parseAddress(""));
+    renderStagingList();
+    // Scroll to the bottom of the staging list
+    const list = document.getElementById('staging-list');
+    list.scrollTop = list.scrollHeight;
 }
 
 // Geocoding Logic
@@ -331,19 +337,18 @@ function addMarker(coords, text, number = null) {
 
 // Rota Optimizasyonu (TSP)
 async function optimizeRoute() {
-    const validPoints = addresses.filter(a => a.coords);
+    const validPoints = addresses.filter(p => p.coords);
     if (validPoints.length < 2) {
-        alert("En az 2 geçerli adres gereklidir.");
+        alert("En az 2 durak (Konum + 1 Adres) gereklidir.");
         return;
     }
 
     showStatus("Rota hesaplanıyor...");
-    
-    // OSRM Trip API requires coords in lon,lat format separated by semicolon
-    const coordsString = validPoints.map(p => `${p.coords[1]},${p.coords[0]}`).join(';');
+    // FIX: DO NOT MUTATE coords with reverse()
+    const coordinates = validPoints.map(p => `${p.coords[1]},${p.coords[0]}`).join(';');
     
     try {
-        const response = await fetch(`${OSRM_TRIP_URL}${coordsString}?source=first&destination=any&roundtrip=false&geometries=geojson`);
+        const response = await fetch(`https://router.project-osrm.org/trip/v1/driving/${coordinates}?source=first&destination=last&roundtrip=false&geometries=geojson&overview=full&steps=true`);
         const data = await response.json();
 
         if (data.code === 'Ok') {
@@ -446,10 +451,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
-    const optimizeBtn = document.getElementById('optimize-btn');
     const markOnMapBtn = document.getElementById('mark-on-map-btn');
     const startNavBtn = document.getElementById('start-nav-btn');
     const testBtn = document.getElementById('add-test-data-btn');
+    const manualBtn = document.getElementById('add-manual-btn');
 
     dropZone.onclick = () => fileInput.click();
     
@@ -473,4 +478,5 @@ document.addEventListener('DOMContentLoaded', () => {
     markOnMapBtn.onclick = markStagedOnMap;
     startNavBtn.onclick = startNavigation;
     testBtn.onclick = addTestAddresses;
+    manualBtn.onclick = addManualStaged;
 });
