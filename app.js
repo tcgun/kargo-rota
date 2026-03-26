@@ -149,13 +149,13 @@ function parseAddress(text) {
         }
     }
 
-    // Mahalle (örn: Merkez mah. / Atatürk mahallesi)
-    const mahMatch = text.match(/([^,.\n]+)\s+(?:mah\.|mahallesi)/i);
-    if (mahMatch) addressObj.mahalle = mahMatch[1].trim() + " Mah.";
+    // Neighborhood (Mahalle)
+    const mahMatch = text.match(/(\w+(?:\s+\w+)*)\s+(?:mahalle(?:si)?|mah\.?|mh\.?)/i);
+    if (mahMatch) addressObj.mahalle = mahMatch[1].trim();
 
-    // Sokak/Cadde (örn: Bağlar cad. / Gül sok.)
-    const sokMatch = text.match(/([^,.\n]+)\s+(?:cd\.|cad\.|cadde|sk\.|sok\.|sokak|bulvarı|blv\.)/i);
-    if (sokMatch) addressObj.sokak = sokMatch[1].trim() + " " + sokMatch[0].split(' ').pop();
+    // Street/Avenue (Sokak/Cadde)
+    const sokMatch = text.match(/(\w+(?:\s+\w+)*)\s+(?:sokak(?:ğı)?|sok\.?|sk\.?|cadde(?:si)?|cad\.?|cd\.?|bulvar(?:ı)?|blv\.?)/i);
+    if (sokMatch) addressObj.sokak = sokMatch[1].trim();
 
     // No (örn: No: 45 / No 45)
     const noMatch = text.match(/No\s*[:\s]?\s*(\d+[\/\d]*)/i);
