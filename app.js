@@ -217,6 +217,32 @@ function addManualStaged() {
     list.scrollTop = list.scrollHeight;
 }
 
+function processBatchPaste() {
+    const text = document.getElementById('batch-paste').value;
+    if (!text.trim()) return;
+
+    // Split by newlines or ISTANBUL
+    const segments = text.split(/\n|İSTANBUL/i);
+    let count = 0;
+
+    for (let segment of segments) {
+        const cleaned = cleanAddressText(segment);
+        if (cleaned.length > 8) { 
+            stagedAddresses.push(parseAddress(cleaned));
+            count++;
+        }
+    }
+
+    if (count > 0) {
+        document.getElementById('batch-paste').value = "";
+        renderStagingList();
+        showStatus(`${count} adet adres panodan eklendi.`);
+        setTimeout(hideStatus, 2000);
+    } else {
+        alert("Geçerli bir adres bulunamadı. Lütfen kontrol edin.");
+    }
+}
+
 // Geocoding Logic
 async function geocodeAndAdd(text, isRetry = false) {
     const query = encodeURIComponent(text.substring(0, 100));
@@ -404,6 +430,9 @@ function startNavigation() {
 }
 
 function addTestAddresses() {
+    const countInput = document.getElementById('test-count');
+    const targetCount = parseInt(countInput.value) || 20;
+
     const testList = [
         ["İstiklal Caddesi, Beyoğlu", "Kapıda ödeme var"], ["Halaskargazi Cd., Şişli", "Zil bozuk"], ["İmrahor Cd., Kağıthane", ""],
         ["Abdi İpekçi Cd., Beşiktaş", "Güvenliğe bırakın"], ["Büyükdere Cd., Levent", ""], ["Bağdat Cd., Bakırköy", ""],
@@ -414,13 +443,19 @@ function addTestAddresses() {
         ["Dereboyu Cd., Mecidiyeköy", ""], ["Gülbahar Cd., Şişli", ""]
     ];
 
-    stagedAddresses = testList.map(item => {
+    // if targetCount > testList.length, we wrap around
+    const selected = [];
+    for (let i = 0; i < targetCount; i++) {
+        selected.push(testList[i % testList.length]);
+    }
+
+    stagedAddresses = selected.map(item => {
         const addr = parseAddress(item[0]);
         addr.not = item[1];
         return addr;
     });
     renderStagingList();
-    showStatus("20 adet test adresi ve talimatlar yüklendi.");
+    showStatus(`${targetCount} adet test adresi ve talimatlar yüklendi.`);
     setTimeout(hideStatus, 2000);
 }
 
@@ -455,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startNavBtn = document.getElementById('start-nav-btn');
     const testBtn = document.getElementById('add-test-data-btn');
     const manualBtn = document.getElementById('add-manual-btn');
+    const batchBtn = document.getElementById('process-batch-btn');
 
     dropZone.onclick = () => fileInput.click();
     
@@ -479,4 +515,5 @@ document.addEventListener('DOMContentLoaded', () => {
     startNavBtn.onclick = startNavigation;
     testBtn.onclick = addTestAddresses;
     manualBtn.onclick = addManualStaged;
+    batchBtn.onclick = processBatchPaste;
 });
