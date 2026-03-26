@@ -486,6 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
+    const optimizeBtn = document.getElementById('optimize-btn');
     const markOnMapBtn = document.getElementById('mark-on-map-btn');
     const startNavBtn = document.getElementById('start-nav-btn');
     const testBtn = document.getElementById('add-test-data-btn');
